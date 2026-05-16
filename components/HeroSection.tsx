@@ -64,6 +64,7 @@ export function HeroSection() {
     employment: "",
     name: "",
     pincode: "",
+    pan: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -310,6 +311,7 @@ function LoanForm({
     employment: string;
     name: string;
     pincode: string;
+    pan: string;
   };
   setData: (d: typeof data) => void;
   onNext: () => void;
@@ -320,6 +322,8 @@ function LoanForm({
   loanAmounts: string[];
   employmentTypes: string[];
 }) {
+  const [panError, setPanError] = useState("");
+  const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
   const steps = ["Loan Details", "Personal Info", "Employment"];
 
   return (
@@ -454,6 +458,40 @@ function LoanForm({
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              PAN Card{" "}
+              <span className="font-normal text-slate-400">(Optional)</span>
+            </label>
+            <input
+              type="text"
+              maxLength={10}
+              placeholder="ABCDE1234F"
+              className={`input-field font-mono uppercase tracking-wider ${panError ? "border-red-400 focus:border-red-400 focus:ring-red-100" : ""}`}
+              value={data.pan}
+              onChange={(e) => {
+                const val = e.target.value
+                  .toUpperCase()
+                  .replace(/[^A-Z0-9]/g, "");
+                setData({ ...data, pan: val });
+                if (panError && PAN_REGEX.test(val)) setPanError("");
+              }}
+              onBlur={() => {
+                if (data.pan && !PAN_REGEX.test(data.pan)) {
+                  setPanError("Invalid PAN format (e.g. ABCDE1234F)");
+                } else {
+                  setPanError("");
+                }
+              }}
+            />
+            {panError ? (
+              <p className="mt-1 text-xs text-red-500">{panError}</p>
+            ) : (
+              <p className="mt-1 text-xs text-slate-400">
+                Used for faster credit matching. Never stored.
+              </p>
+            )}
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
               Pin Code
             </label>
             <input
@@ -469,7 +507,11 @@ function LoanForm({
           </div>
           <button
             onClick={onNext}
-            disabled={!data.name || data.pincode.length < 6}
+            disabled={
+              !data.name ||
+              data.pincode.length < 6 ||
+              (!!data.pan && !PAN_REGEX.test(data.pan))
+            }
             className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next Step <ArrowRight size={16} />

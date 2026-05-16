@@ -32,8 +32,14 @@ export function OTPModal({ phone, name, loanType, onClose }: OTPModalProps) {
     });
 
     if (!res.ok) {
-      const data = await res.json();
-      setError(data.error ?? "Failed to send OTP");
+      let errorMsg = "Failed to send OTP";
+      try {
+        const data = await res.json();
+        errorMsg = data.error ?? errorMsg;
+      } catch {
+        /* non-JSON body */
+      }
+      setError(errorMsg);
       setStage("error");
       return;
     }
@@ -64,8 +70,14 @@ export function OTPModal({ phone, name, loanType, onClose }: OTPModalProps) {
     });
 
     if (!res.ok) {
-      const data = await res.json();
-      setError(data.error ?? "Invalid OTP");
+      let errorMsg = "Invalid OTP";
+      try {
+        const data = await res.json();
+        errorMsg = data.error ?? errorMsg;
+      } catch {
+        /* non-JSON body */
+      }
+      setError(errorMsg);
       setStage("ready");
       return;
     }

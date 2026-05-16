@@ -41,10 +41,10 @@ export async function POST(req: NextRequest) {
           { status: 429 },
         );
       }
-      console.error("[auth/send-otp]", error.message);
+      console.error("[auth/send-otp]", error.status, error.message);
       return NextResponse.json(
-        { error: "Failed to send OTP" },
-        { status: 500 },
+        { error: error.message || "Failed to send OTP. Please try again." },
+        { status: error.status ?? 500 },
       );
     }
 
