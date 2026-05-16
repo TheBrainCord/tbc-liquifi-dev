@@ -83,8 +83,14 @@ export function HeroSection() {
       body: JSON.stringify(payload),
     });
     if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error ?? "Something went wrong");
+      let msg = "Something went wrong. Please try again.";
+      try {
+        const data = await res.json();
+        msg = data.error ?? msg;
+      } catch {
+        /* non-JSON error body */
+      }
+      throw new Error(msg);
     }
   };
 

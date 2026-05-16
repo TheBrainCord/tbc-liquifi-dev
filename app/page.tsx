@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
+import { LiveActivityTicker } from "@/components/LiveActivityTicker";
 import { TrustMarquee } from "@/components/TrustMarquee";
 import { LoanProducts } from "@/components/LoanProducts";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -11,6 +12,7 @@ import { Footer } from "@/components/Footer";
 export default function HomePage() {
   return (
     <main>
+      <LiveActivityTicker />
       <Navbar />
       <HeroSection />
       <TrustMarquee />

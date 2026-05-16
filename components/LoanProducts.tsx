@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   User,
   Home,
@@ -27,6 +28,7 @@ const PRODUCTS = [
       "Minimal documentation",
     ],
     popular: true,
+    href: "/loans/personal",
   },
   {
     icon: Home,
@@ -43,6 +45,7 @@ const PRODUCTS = [
       "Balance transfer available",
     ],
     popular: false,
+    href: "/loans/home",
   },
   {
     icon: Briefcase,
@@ -59,6 +62,7 @@ const PRODUCTS = [
       "GST-based underwriting",
     ],
     popular: false,
+    href: "/loans/business",
   },
   {
     icon: Car,
@@ -75,6 +79,7 @@ const PRODUCTS = [
       "Used car financing",
     ],
     popular: false,
+    href: "/loans/car",
   },
   {
     icon: GraduationCap,
@@ -91,6 +96,7 @@ const PRODUCTS = [
       "Tax deduction u/s 80E",
     ],
     popular: false,
+    href: "#check-eligibility",
   },
   {
     icon: Heart,
@@ -107,6 +113,7 @@ const PRODUCTS = [
       "Zero processing fee",
     ],
     popular: false,
+    href: "#check-eligibility",
   },
 ];
 
@@ -194,9 +201,9 @@ export function LoanProducts() {
                   ))}
                 </ul>
 
-                <a
-                  href="#check-eligibility"
-                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full text-sm font-bold border-2 transition-all hover:shadow-sm"
+                <Link
+                  href={product.href}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full text-sm font-bold border-2 transition-all hover:shadow-sm hover:text-white"
                   style={{
                     borderColor: product.color,
                     color: product.color,
@@ -213,7 +220,7 @@ export function LoanProducts() {
                   }}
                 >
                   Apply Now <ArrowRight size={14} />
-                </a>
+                </Link>
               </div>
             );
           })}

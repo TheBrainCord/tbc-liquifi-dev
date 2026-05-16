@@ -56,6 +56,10 @@ export async function GET() {
   }
 
   const admin = getSupabaseAdmin();
+  if (!admin) {
+    return NextResponse.json({ profile: null });
+  }
+
   const { data: profile, error } = await admin
     .from("users")
     .select("full_name, employment_type, monthly_income, pincode, city")
@@ -95,6 +99,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   const admin = getSupabaseAdmin();
+  if (!admin) {
+    return NextResponse.json({ success: true });
+  }
+
   const { error } = await admin
     .from("users")
     .update(parsed.data)
