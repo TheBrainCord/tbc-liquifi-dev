@@ -8,7 +8,9 @@ import {
   TrendingUp,
   CreditCard,
   Users,
+  Loader2,
 } from "lucide-react";
+import { OTPModal } from "@/components/OTPModal";
 
 const LOAN_TYPES = ["Personal Loan", "Home Loan", "Business Loan", "Car Loan"];
 const LOAN_AMOUNTS = [
@@ -20,12 +22,31 @@ const LOAN_AMOUNTS = [
 ];
 const EMPLOYMENT_TYPES = ["Salaried", "Self-Employed", "Business Owner"];
 
+const LOAN_TYPE_MAP: Record<string, string> = {
+  "Personal Loan": "personal",
+  "Home Loan": "home",
+  "Business Loan": "business",
+  "Car Loan": "car",
+};
+
+const EMPLOYMENT_MAP: Record<string, string> = {
+  Salaried: "salaried",
+  "Self-Employed": "self_employed",
+  "Business Owner": "business_owner",
+};
+
 const TRUST_ITEMS = [
   { icon: Users, value: "2.4M+", label: "Happy Customers" },
   { icon: TrendingUp, value: "₹12,000 Cr+", label: "Loans Disbursed" },
   { icon: Star, value: "4.8/5", label: "App Rating" },
   { icon: CreditCard, value: "90 Days", label: "CIBIL Fix Guarantee" },
 ];
+
+interface OTPState {
+  phone: string;
+  name?: string;
+  loanType?: string;
+}
 
 export function HeroSection() {
   const [activeTab, setActiveTab] = useState<"loan" | "cibil">("loan");
@@ -39,132 +60,224 @@ export function HeroSection() {
     pincode: "",
   });
 
-  const handleLoanNext = () => {
-    if (step < 3) setStep(step + 1);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [otp, setOtp] = useState<OTPState | null>(null);
+  const [verified, setVerified] = useState(false);
+
+  const captureLead = async (payload: {
+    phone: string;
+    name?: string;
+    loan_type: string;
+    loan_amount?: string;
+    employment_type?: string;
+    pincode?: string;
+  }) => {
+    const res = await fetch("/api/leads/capture", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error ?? "Something went wrong");
+    }
   };
 
-  return (
-    <section className="relative min-h-screen bg-gradient-to-br from-[#0f2460] via-[#1e3a8a] to-[#1d4ed8] pt-28 pb-16 overflow-hidden">
-      {/* Background decoration */}
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 20% 50%, #60a5fa 0%, transparent 50%), radial-gradient(circle at 80% 20%, #f97316 0%, transparent 45%)",
-        }}
-      />
-      <div
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      />
+  const handleLoanSubmit = async () => {
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      await captureLead({
+        phone: loanData.mobile,
+        name: loanData.name || undefined,
+        loan_type: LOAN_TYPE_MAP[loanData.type] ?? "personal",
+        loan_amount: loanData.amount || undefined,
+        employment_type: EMPLOYMENT_MAP[loanData.employment] ?? undefined,
+        pincode: loanData.pincode || undefined,
+      });
+      setOtp({
+        phone: loanData.mobile,
+        name: loanData.name || undefined,
+        loanType: LOAN_TYPE_MAP[loanData.type],
+      });
+    } catch (e) {
+      setSubmitError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left: Headline */}
-          <div className="text-white space-y-6">
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm font-semibold backdrop-blur-sm">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              RBI Registered &amp; 100% Secure
-            </div>
+  const handleVerified = () => {
+    setOtp(null);
+    setVerified(true);
+  };
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.05] tracking-tight">
-              Fix Your Credit.
-              <br />
-              <span className="text-[#fb923c]">Fund Your Dreams.</span>
-            </h1>
-
-            <p className="text-lg text-blue-100 max-w-lg leading-relaxed">
-              India&apos;s smartest loan marketplace. Check your CIBIL score for
-              free, get matched with 50+ lenders, or repair your credit in 90
-              days with our AI-powered CIBIL Fix program.
-            </p>
-
-            <div className="flex flex-wrap gap-3">
-              {[
-                "Free CIBIL Check",
-                "No Hidden Charges",
-                "Instant Approval",
-              ].map((item) => (
-                <span
-                  key={item}
-                  className="flex items-center gap-1.5 text-sm text-blue-100"
-                >
-                  <CheckCircle size={15} className="text-green-400" />
-                  {item}
-                </span>
-              ))}
-            </div>
-
-            {/* Trust metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
-              {TRUST_ITEMS.map(({ icon: Icon, value, label }) => (
-                <div key={label} className="text-center">
-                  <Icon size={18} className="text-blue-300 mx-auto mb-1" />
-                  <div className="text-xl font-black text-white">{value}</div>
-                  <div className="text-xs text-blue-300">{label}</div>
-                </div>
-              ))}
-            </div>
+  if (verified) {
+    return (
+      <section className="relative min-h-screen bg-gradient-to-br from-[#0f2460] via-[#1e3a8a] to-[#1d4ed8] pt-28 pb-16 overflow-hidden flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-2xl p-10 max-w-md w-full mx-4 text-center space-y-5">
+          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+            <CheckCircle size={40} className="text-green-600" />
           </div>
+          <h2 className="text-2xl font-black text-[#0f172a]">
+            You&apos;re Verified!
+          </h2>
+          <p className="text-slate-600 text-sm">
+            Our credit expert will call you within 30 minutes with personalised
+            loan offers matched to your profile.
+          </p>
+          <div className="bg-blue-50 rounded-xl p-4 text-sm font-semibold text-[#1e3a8a]">
+            Average approval time:{" "}
+            <span className="text-green-600">24 hours</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
-          {/* Right: Lead capture card */}
-          <div
-            id="check-eligibility"
-            className="bg-white rounded-2xl shadow-2xl overflow-hidden"
-          >
-            {/* Tabs */}
-            <div className="flex border-b border-[#e2e8f0]">
-              {(
-                [
-                  { id: "loan", label: "Apply for Loan" },
-                  { id: "cibil", label: "CIBIL Fix" },
-                ] as const
-              ).map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    setStep(1);
-                  }}
-                  className={`flex-1 py-4 text-sm font-bold transition-colors ${
-                    activeTab === tab.id
-                      ? "text-[#1e3a8a] border-b-2 border-[#1e3a8a] -mb-px bg-blue-50"
-                      : "text-slate-500 hover:text-slate-700"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+  return (
+    <>
+      {otp && (
+        <OTPModal
+          phone={otp.phone}
+          name={otp.name}
+          loanType={otp.loanType}
+          onVerified={handleVerified}
+          onClose={() => setOtp(null)}
+        />
+      )}
+
+      <section className="relative min-h-screen bg-gradient-to-br from-[#0f2460] via-[#1e3a8a] to-[#1d4ed8] pt-28 pb-16 overflow-hidden">
+        {/* Background decoration */}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 50%, #60a5fa 0%, transparent 50%), radial-gradient(circle at 80% 20%, #f97316 0%, transparent 45%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
+        />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Headline */}
+            <div className="text-white space-y-6">
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm font-semibold backdrop-blur-sm">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                RBI Registered &amp; 100% Secure
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.05] tracking-tight">
+                Fix Your Credit.
+                <br />
+                <span className="text-[#fb923c]">Fund Your Dreams.</span>
+              </h1>
+
+              <p className="text-lg text-blue-100 max-w-lg leading-relaxed">
+                India&apos;s smartest loan marketplace. Check your CIBIL score
+                for free, get matched with 50+ lenders, or repair your credit in
+                90 days with our AI-powered CIBIL Fix program.
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                {[
+                  "Free CIBIL Check",
+                  "No Hidden Charges",
+                  "Instant Approval",
+                ].map((item) => (
+                  <span
+                    key={item}
+                    className="flex items-center gap-1.5 text-sm text-blue-100"
+                  >
+                    <CheckCircle size={15} className="text-green-400" />
+                    {item}
+                  </span>
+                ))}
+              </div>
+
+              {/* Trust metrics */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
+                {TRUST_ITEMS.map(({ icon: Icon, value, label }) => (
+                  <div key={label} className="text-center">
+                    <Icon size={18} className="text-blue-300 mx-auto mb-1" />
+                    <div className="text-xl font-black text-white">{value}</div>
+                    <div className="text-xs text-blue-300">{label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="p-6">
-              {activeTab === "loan" ? (
-                <LoanForm
-                  step={step}
-                  data={loanData}
-                  setData={setLoanData}
-                  onNext={handleLoanNext}
-                  loanTypes={LOAN_TYPES}
-                  loanAmounts={LOAN_AMOUNTS}
-                  employmentTypes={EMPLOYMENT_TYPES}
-                />
-              ) : (
-                <CIBILFixForm />
-              )}
-            </div>
+            {/* Right: Lead capture card */}
+            <div
+              id="check-eligibility"
+              className="bg-white rounded-2xl shadow-2xl overflow-hidden"
+            >
+              {/* Tabs */}
+              <div className="flex border-b border-[#e2e8f0]">
+                {(
+                  [
+                    { id: "loan", label: "Apply for Loan" },
+                    { id: "cibil", label: "CIBIL Fix" },
+                  ] as const
+                ).map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      setStep(1);
+                      setSubmitError("");
+                    }}
+                    className={`flex-1 py-4 text-sm font-bold transition-colors ${
+                      activeTab === tab.id
+                        ? "text-[#1e3a8a] border-b-2 border-[#1e3a8a] -mb-px bg-blue-50"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
-            <div className="px-6 pb-4 flex items-center justify-center gap-2 text-xs text-slate-400">
-              <CheckCircle size={12} className="text-green-500" />
-              256-bit SSL Encrypted &nbsp;|&nbsp; Your data is 100% secure
+              <div className="p-6">
+                {activeTab === "loan" ? (
+                  <LoanForm
+                    step={step}
+                    data={loanData}
+                    setData={setLoanData}
+                    onNext={() => setStep((s) => Math.min(s + 1, 3))}
+                    onSubmit={handleLoanSubmit}
+                    submitting={submitting}
+                    submitError={submitError}
+                    loanTypes={LOAN_TYPES}
+                    loanAmounts={LOAN_AMOUNTS}
+                    employmentTypes={EMPLOYMENT_TYPES}
+                  />
+                ) : (
+                  <CIBILFixForm
+                    onOTPRequired={(phone) =>
+                      setOtp({ phone, loanType: "cibil_fix" })
+                    }
+                  />
+                )}
+              </div>
+
+              <div className="px-6 pb-4 flex items-center justify-center gap-2 text-xs text-slate-400">
+                <CheckCircle size={12} className="text-green-500" />
+                256-bit SSL Encrypted &nbsp;|&nbsp; Your data is 100% secure
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
 
@@ -173,6 +286,9 @@ function LoanForm({
   data,
   setData,
   onNext,
+  onSubmit,
+  submitting,
+  submitError,
   loanTypes,
   loanAmounts,
   employmentTypes,
@@ -186,15 +302,11 @@ function LoanForm({
     name: string;
     pincode: string;
   };
-  setData: (d: {
-    mobile: string;
-    amount: string;
-    type: string;
-    employment: string;
-    name: string;
-    pincode: string;
-  }) => void;
+  setData: (d: typeof data) => void;
   onNext: () => void;
+  onSubmit: () => void;
+  submitting: boolean;
+  submitError: string;
   loanTypes: string[];
   loanAmounts: string[];
   employmentTypes: string[];
@@ -342,7 +454,10 @@ function LoanForm({
               className="input-field"
               value={data.pincode}
               onChange={(e) =>
-                setData({ ...data, pincode: e.target.value.replace(/\D/g, "") })
+                setData({
+                  ...data,
+                  pincode: e.target.value.replace(/\D/g, ""),
+                })
               }
             />
           </div>
@@ -378,11 +493,28 @@ function LoanForm({
               ))}
             </div>
           </div>
+
+          {submitError && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+              {submitError}
+            </p>
+          )}
+
           <button
-            disabled={!data.employment}
+            onClick={onSubmit}
+            disabled={!data.employment || submitting}
             className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Check My Eligibility <ArrowRight size={16} />
+            {submitting ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Saving…
+              </>
+            ) : (
+              <>
+                Check My Eligibility <ArrowRight size={16} />
+              </>
+            )}
           </button>
           <p className="text-xs text-center text-slate-400">
             By continuing, you agree to our{" "}
@@ -400,30 +532,37 @@ function LoanForm({
   );
 }
 
-function CIBILFixForm() {
+function CIBILFixForm({
+  onOTPRequired,
+}: {
+  onOTPRequired: (phone: string) => void;
+}) {
   const [mobile, setMobile] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  if (submitted) {
-    return (
-      <div className="text-center py-8 space-y-4">
-        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-          <CheckCircle size={32} className="text-green-600" />
-        </div>
-        <h3 className="text-xl font-black text-[#0f172a]">
-          CIBIL Check Initiated!
-        </h3>
-        <p className="text-sm text-slate-500">
-          Our credit expert will call you within 30 minutes to discuss your
-          score and personalised repair plan.
-        </p>
-        <div className="bg-blue-50 rounded-xl p-4 text-sm text-[#1e3a8a] font-semibold">
-          Average CIBIL score improvement:{" "}
-          <span className="text-green-600">+120 points in 90 days</span>
-        </div>
-      </div>
-    );
-  }
+  const handleSubmit = async () => {
+    if (mobile.length < 10) return;
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/leads/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: mobile, loan_type: "cibil_fix" }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Something went wrong");
+      }
+      onOTPRequired(mobile);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -485,12 +624,27 @@ function CIBILFixForm() {
           </div>
         ))}
 
+        {error && (
+          <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+            {error}
+          </p>
+        )}
+
         <button
-          onClick={() => mobile.length >= 10 && setSubmitted(true)}
-          disabled={mobile.length < 10}
+          onClick={handleSubmit}
+          disabled={mobile.length < 10 || submitting}
           className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Get Free CIBIL Report <ArrowRight size={16} />
+          {submitting ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Saving…
+            </>
+          ) : (
+            <>
+              Get Free CIBIL Report <ArrowRight size={16} />
+            </>
+          )}
         </button>
       </div>
     </div>
