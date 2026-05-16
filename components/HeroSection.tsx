@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   CheckCircle,
@@ -9,8 +10,10 @@ import {
   CreditCard,
   Users,
   Loader2,
+  LayoutDashboard,
 } from "lucide-react";
 import { OTPModal } from "@/components/OTPModal";
+import { useAuth } from "@/lib/supabase/auth-provider";
 
 const LOAN_TYPES = ["Personal Loan", "Home Loan", "Business Loan", "Car Loan"];
 const LOAN_AMOUNTS = [
@@ -49,6 +52,9 @@ interface OTPState {
 }
 
 export function HeroSection() {
+  const { user } = useAuth();
+  const router = useRouter();
+
   const [activeTab, setActiveTab] = useState<"loan" | "cibil">("loan");
   const [step, setStep] = useState(1);
   const [loanData, setLoanData] = useState({
@@ -59,11 +65,9 @@ export function HeroSection() {
     name: "",
     pincode: "",
   });
-
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [otp, setOtp] = useState<OTPState | null>(null);
-  const [verified, setVerified] = useState(false);
 
   const captureLead = async (payload: {
     phone: string;
@@ -108,34 +112,6 @@ export function HeroSection() {
     }
   };
 
-  const handleVerified = () => {
-    setOtp(null);
-    setVerified(true);
-  };
-
-  if (verified) {
-    return (
-      <section className="relative min-h-screen bg-gradient-to-br from-[#0f2460] via-[#1e3a8a] to-[#1d4ed8] pt-28 pb-16 overflow-hidden flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-2xl p-10 max-w-md w-full mx-4 text-center space-y-5">
-          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-            <CheckCircle size={40} className="text-green-600" />
-          </div>
-          <h2 className="text-2xl font-black text-[#0f172a]">
-            You&apos;re Verified!
-          </h2>
-          <p className="text-slate-600 text-sm">
-            Our credit expert will call you within 30 minutes with personalised
-            loan offers matched to your profile.
-          </p>
-          <div className="bg-blue-50 rounded-xl p-4 text-sm font-semibold text-[#1e3a8a]">
-            Average approval time:{" "}
-            <span className="text-green-600">24 hours</span>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <>
       {otp && (
@@ -143,12 +119,11 @@ export function HeroSection() {
           phone={otp.phone}
           name={otp.name}
           loanType={otp.loanType}
-          onVerified={handleVerified}
           onClose={() => setOtp(null)}
         />
       )}
 
-      <section className="relative min-h-screen bg-gradient-to-br from-[#0f2460] via-[#1e3a8a] to-[#1d4ed8] pt-28 pb-16 overflow-hidden">
+      <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#0f2460] via-[#1e3a8a] to-[#1d4ed8] pb-16 pt-28">
         {/* Background decoration */}
         <div
           className="absolute inset-0 opacity-10"
@@ -166,22 +141,22 @@ export function HeroSection() {
           }}
         />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
             {/* Left: Headline */}
-            <div className="text-white space-y-6">
-              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm font-semibold backdrop-blur-sm">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <div className="space-y-6 text-white">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-semibold backdrop-blur-sm">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
                 RBI Registered &amp; 100% Secure
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.05] tracking-tight">
+              <h1 className="text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
                 Fix Your Credit.
                 <br />
                 <span className="text-[#fb923c]">Fund Your Dreams.</span>
               </h1>
 
-              <p className="text-lg text-blue-100 max-w-lg leading-relaxed">
+              <p className="max-w-lg text-lg leading-relaxed text-blue-100">
                 India&apos;s smartest loan marketplace. Check your CIBIL score
                 for free, get matched with 50+ lenders, or repair your credit in
                 90 days with our AI-powered CIBIL Fix program.
@@ -203,11 +178,10 @@ export function HeroSection() {
                 ))}
               </div>
 
-              {/* Trust metrics */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
+              <div className="grid grid-cols-2 gap-4 pt-4 sm:grid-cols-4">
                 {TRUST_ITEMS.map(({ icon: Icon, value, label }) => (
                   <div key={label} className="text-center">
-                    <Icon size={18} className="text-blue-300 mx-auto mb-1" />
+                    <Icon size={18} className="mx-auto mb-1 text-blue-300" />
                     <div className="text-xl font-black text-white">{value}</div>
                     <div className="text-xs text-blue-300">{label}</div>
                   </div>
@@ -218,61 +192,90 @@ export function HeroSection() {
             {/* Right: Lead capture card */}
             <div
               id="check-eligibility"
-              className="bg-white rounded-2xl shadow-2xl overflow-hidden"
+              className="overflow-hidden rounded-2xl bg-white shadow-2xl"
             >
-              {/* Tabs */}
-              <div className="flex border-b border-[#e2e8f0]">
-                {(
-                  [
-                    { id: "loan", label: "Apply for Loan" },
-                    { id: "cibil", label: "CIBIL Fix" },
-                  ] as const
-                ).map((tab) => (
+              {user ? (
+                /* ── Already logged in ── */
+                <div className="p-8 text-center space-y-5">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                    <CheckCircle size={32} className="text-green-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-[#0f172a]">
+                      Welcome back!
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      You&apos;re signed in as{" "}
+                      <span className="font-semibold text-[#1e3a8a]">
+                        {user.phone}
+                      </span>
+                    </p>
+                  </div>
                   <button
-                    key={tab.id}
-                    onClick={() => {
-                      setActiveTab(tab.id);
-                      setStep(1);
-                      setSubmitError("");
-                    }}
-                    className={`flex-1 py-4 text-sm font-bold transition-colors ${
-                      activeTab === tab.id
-                        ? "text-[#1e3a8a] border-b-2 border-[#1e3a8a] -mb-px bg-blue-50"
-                        : "text-slate-500 hover:text-slate-700"
-                    }`}
+                    onClick={() => router.push("/dashboard")}
+                    className="btn-primary w-full"
                   >
-                    {tab.label}
+                    <LayoutDashboard size={16} />
+                    Go to Dashboard
                   </button>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <>
+                  {/* Tabs */}
+                  <div className="flex border-b border-[#e2e8f0]">
+                    {(
+                      [
+                        { id: "loan", label: "Apply for Loan" },
+                        { id: "cibil", label: "CIBIL Fix" },
+                      ] as const
+                    ).map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          setActiveTab(tab.id);
+                          setStep(1);
+                          setSubmitError("");
+                        }}
+                        className={`flex-1 py-4 text-sm font-bold transition-colors ${
+                          activeTab === tab.id
+                            ? "-mb-px border-b-2 border-[#1e3a8a] bg-blue-50 text-[#1e3a8a]"
+                            : "text-slate-500 hover:text-slate-700"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
 
-              <div className="p-6">
-                {activeTab === "loan" ? (
-                  <LoanForm
-                    step={step}
-                    data={loanData}
-                    setData={setLoanData}
-                    onNext={() => setStep((s) => Math.min(s + 1, 3))}
-                    onSubmit={handleLoanSubmit}
-                    submitting={submitting}
-                    submitError={submitError}
-                    loanTypes={LOAN_TYPES}
-                    loanAmounts={LOAN_AMOUNTS}
-                    employmentTypes={EMPLOYMENT_TYPES}
-                  />
-                ) : (
-                  <CIBILFixForm
-                    onOTPRequired={(phone) =>
-                      setOtp({ phone, loanType: "cibil_fix" })
-                    }
-                  />
-                )}
-              </div>
+                  <div className="p-6">
+                    {activeTab === "loan" ? (
+                      <LoanForm
+                        step={step}
+                        data={loanData}
+                        setData={setLoanData}
+                        onNext={() => setStep((s) => Math.min(s + 1, 3))}
+                        onSubmit={handleLoanSubmit}
+                        submitting={submitting}
+                        submitError={submitError}
+                        loanTypes={LOAN_TYPES}
+                        loanAmounts={LOAN_AMOUNTS}
+                        employmentTypes={EMPLOYMENT_TYPES}
+                      />
+                    ) : (
+                      <CIBILFixForm
+                        onOTPRequired={(phone) =>
+                          setOtp({ phone, loanType: "cibil_fix" })
+                        }
+                      />
+                    )}
+                  </div>
 
-              <div className="px-6 pb-4 flex items-center justify-center gap-2 text-xs text-slate-400">
-                <CheckCircle size={12} className="text-green-500" />
-                256-bit SSL Encrypted &nbsp;|&nbsp; Your data is 100% secure
-              </div>
+                  <div className="flex items-center justify-center gap-2 px-6 pb-4 text-xs text-slate-400">
+                    <CheckCircle size={12} className="text-green-500" />
+                    256-bit SSL Encrypted &nbsp;|&nbsp; Your data is 100% secure
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -319,7 +322,7 @@ function LoanForm({
         <h2 className="text-xl font-black text-[#0f172a]">
           Check Loan Eligibility
         </h2>
-        <p className="text-sm text-slate-500 mt-0.5">
+        <p className="mt-0.5 text-sm text-slate-500">
           Takes only 2 minutes. No credit impact.
         </p>
       </div>
@@ -327,9 +330,9 @@ function LoanForm({
       {/* Step indicator */}
       <div className="flex items-center gap-2">
         {steps.map((s, i) => (
-          <div key={s} className="flex items-center gap-2 flex-1">
+          <div key={s} className="flex flex-1 items-center gap-2">
             <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                 i + 1 <= step
                   ? "bg-[#1e3a8a] text-white"
                   : "bg-slate-100 text-slate-400"
@@ -354,7 +357,7 @@ function LoanForm({
       {step === 1 && (
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
               Loan Type
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -362,7 +365,7 @@ function LoanForm({
                 <button
                   key={t}
                   onClick={() => setData({ ...data, type: t })}
-                  className={`py-2.5 px-3 rounded-lg text-sm font-semibold border-2 transition-all ${
+                  className={`rounded-lg border-2 px-3 py-2.5 text-sm font-semibold transition-all ${
                     data.type === t
                       ? "border-[#1e3a8a] bg-blue-50 text-[#1e3a8a]"
                       : "border-[#e2e8f0] text-slate-600 hover:border-[#1e3a8a]"
@@ -374,7 +377,7 @@ function LoanForm({
             </div>
           </div>
           <div>
-            <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
               Loan Amount Required
             </label>
             <div className="flex flex-wrap gap-2">
@@ -382,7 +385,7 @@ function LoanForm({
                 <button
                   key={a}
                   onClick={() => setData({ ...data, amount: a })}
-                  className={`py-1.5 px-3 rounded-full text-xs font-semibold border transition-all ${
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
                     data.amount === a
                       ? "border-[#ea580c] bg-orange-50 text-[#ea580c]"
                       : "border-[#e2e8f0] text-slate-500 hover:border-[#ea580c]"
@@ -394,11 +397,11 @@ function LoanForm({
             </div>
           </div>
           <div>
-            <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
               Mobile Number
             </label>
             <div className="flex">
-              <span className="flex items-center px-3 bg-slate-100 border border-r-0 border-[#e2e8f0] rounded-l-lg text-sm font-semibold text-slate-500">
+              <span className="flex items-center rounded-l-lg border border-r-0 border-[#e2e8f0] bg-slate-100 px-3 text-sm font-semibold text-slate-500">
                 +91
               </span>
               <input
@@ -419,7 +422,7 @@ function LoanForm({
           <button
             onClick={onNext}
             disabled={!data.type || !data.amount || data.mobile.length < 10}
-            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next Step <ArrowRight size={16} />
           </button>
@@ -429,7 +432,7 @@ function LoanForm({
       {step === 2 && (
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
               Full Name
             </label>
             <input
@@ -439,12 +442,12 @@ function LoanForm({
               value={data.name}
               onChange={(e) => setData({ ...data, name: e.target.value })}
             />
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="mt-1 text-xs text-slate-400">
               Required for credit check. Your PAN data is never stored.
             </p>
           </div>
           <div>
-            <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
               Pin Code
             </label>
             <input
@@ -454,17 +457,14 @@ function LoanForm({
               className="input-field"
               value={data.pincode}
               onChange={(e) =>
-                setData({
-                  ...data,
-                  pincode: e.target.value.replace(/\D/g, ""),
-                })
+                setData({ ...data, pincode: e.target.value.replace(/\D/g, "") })
               }
             />
           </div>
           <button
             onClick={onNext}
             disabled={!data.name || data.pincode.length < 6}
-            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next Step <ArrowRight size={16} />
           </button>
@@ -474,7 +474,7 @@ function LoanForm({
       {step === 3 && (
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
               Employment Type
             </label>
             <div className="space-y-2">
@@ -482,7 +482,7 @@ function LoanForm({
                 <button
                   key={e}
                   onClick={() => setData({ ...data, employment: e })}
-                  className={`w-full py-3 px-4 rounded-lg text-sm font-semibold border-2 text-left transition-all ${
+                  className={`w-full rounded-lg border-2 px-4 py-3 text-left text-sm font-semibold transition-all ${
                     data.employment === e
                       ? "border-[#1e3a8a] bg-blue-50 text-[#1e3a8a]"
                       : "border-[#e2e8f0] text-slate-600 hover:border-[#1e3a8a]"
@@ -495,7 +495,7 @@ function LoanForm({
           </div>
 
           {submitError && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
               {submitError}
             </p>
           )}
@@ -503,12 +503,11 @@ function LoanForm({
           <button
             onClick={onSubmit}
             disabled={!data.employment || submitting}
-            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? (
               <>
-                <Loader2 size={16} className="animate-spin" />
-                Saving…
+                <Loader2 size={16} className="animate-spin" /> Saving…
               </>
             ) : (
               <>
@@ -516,7 +515,7 @@ function LoanForm({
               </>
             )}
           </button>
-          <p className="text-xs text-center text-slate-400">
+          <p className="text-center text-xs text-slate-400">
             By continuing, you agree to our{" "}
             <a href="#terms" className="text-[#1e3a8a] underline">
               T&amp;C
@@ -545,7 +544,6 @@ function CIBILFixForm({
     if (mobile.length < 10) return;
     setSubmitting(true);
     setError("");
-
     try {
       const res = await fetch("/api/leads/capture", {
         method: "POST",
@@ -568,21 +566,21 @@ function CIBILFixForm({
     <div className="space-y-5">
       <div>
         <h2 className="text-xl font-black text-[#0f172a]">Free CIBIL Check</h2>
-        <p className="text-sm text-slate-500 mt-0.5">
-          Check your score without impacting it. Get a personalized repair plan.
+        <p className="mt-0.5 text-sm text-slate-500">
+          Check your score without impacting it. Get a personalised repair plan.
         </p>
       </div>
 
-      <div className="bg-gradient-to-r from-blue-50 to-orange-50 rounded-xl p-4 border border-blue-100">
+      <div className="rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-orange-50 p-4">
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#ea580c] flex items-center justify-center shrink-0">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#ea580c]">
             <TrendingUp size={14} className="text-white" />
           </div>
           <div>
             <div className="text-sm font-bold text-[#0f172a]">
               CIBIL Fix Program
             </div>
-            <div className="text-xs text-slate-600 mt-0.5">
+            <div className="mt-0.5 text-xs text-slate-600">
               Low score? Our experts dispute errors, clear dues &amp; improve
               your score in 90 days — guaranteed.
             </div>
@@ -592,11 +590,11 @@ function CIBILFixForm({
 
       <div className="space-y-3">
         <div>
-          <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+          <label className="mb-1.5 block text-sm font-semibold text-slate-700">
             Mobile Number
           </label>
           <div className="flex">
-            <span className="flex items-center px-3 bg-slate-100 border border-r-0 border-[#e2e8f0] rounded-l-lg text-sm font-semibold text-slate-500">
+            <span className="flex items-center rounded-l-lg border border-r-0 border-[#e2e8f0] bg-slate-100 px-3 text-sm font-semibold text-slate-500">
               +91
             </span>
             <input
@@ -619,13 +617,13 @@ function CIBILFixForm({
             key={item}
             className="flex items-center gap-2 text-sm text-slate-600"
           >
-            <CheckCircle size={14} className="text-green-500 shrink-0" />
+            <CheckCircle size={14} className="shrink-0 text-green-500" />
             {item}
           </div>
         ))}
 
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
             {error}
           </p>
         )}
@@ -633,12 +631,11 @@ function CIBILFixForm({
         <button
           onClick={handleSubmit}
           disabled={mobile.length < 10 || submitting}
-          className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitting ? (
             <>
-              <Loader2 size={16} className="animate-spin" />
-              Saving…
+              <Loader2 size={16} className="animate-spin" /> Saving…
             </>
           ) : (
             <>
