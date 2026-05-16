@@ -1,7 +1,7 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "cd ../.. && npm install --workspace=apps/liquifi",
+  "installCommand": "npm install",
   "headers": [
     {
       "source": "/(.*)",
