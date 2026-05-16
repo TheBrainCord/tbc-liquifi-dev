@@ -13,7 +13,7 @@ export function DashboardNav() {
 
   const handleLogout = async () => {
     const supabase = getSupabaseClient();
-    await supabase.auth.signOut();
+    await supabase?.auth.signOut();
     router.push("/");
   };
 

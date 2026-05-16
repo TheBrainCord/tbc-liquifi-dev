@@ -4,13 +4,15 @@ import { createBrowserClient } from "@supabase/ssr";
 
 let client: ReturnType<typeof createBrowserClient> | null = null;
 
-// Uses cookie-based storage so the session is visible to middleware
+// Returns null when Supabase env vars are not configured (e.g. local dev without
+// .env.local) so the rest of the app renders without crashing.
 export function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+
   if (!client) {
-    client = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    );
+    client = createBrowserClient(url, key);
   }
   return client;
 }

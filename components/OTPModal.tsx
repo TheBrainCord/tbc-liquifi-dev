@@ -72,10 +72,10 @@ export function OTPModal({ phone, name, loanType, onClose }: OTPModalProps) {
 
     const data = await res.json();
 
-    // Persist session in cookies so middleware can read it
+    // Persist session in cookies so the proxy can read it
     if (data.session?.access_token) {
       const supabase = getSupabaseClient();
-      await supabase.auth.setSession(data.session);
+      await supabase?.auth.setSession(data.session);
     }
 
     router.push("/dashboard");
