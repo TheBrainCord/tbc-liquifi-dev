@@ -1,6 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SendOTPSchema } from "@/lib/validations";
-import { getSupabaseAnon } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
+
+function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+async function sendSMS(
+  phone: string,
+  otp: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const apiKey = process.env.FAST2SMS_API_KEY;
+
+  if (!apiKey) {
+    // Dev fallback — OTP visible in server logs only
+    console.log(`[dev/otp] ${phone} → ${otp}`);
+    return { ok: true };
+  }
+
+  try {
+    const res = await fetch("https://www.fast2sms.com/dev/bulkV2", {
+      method: "POST",
+      headers: {
+        authorization: apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        route: "otp",
+        variables_values: otp,
+        numbers: phone,
+        flash: "0",
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!data.return) {
+      const msg = Array.isArray(data.message) ? data.message[0] : data.message;
+      return { ok: false, error: msg ?? "Failed to send OTP" };
+    }
+    return { ok: true };
+  } catch (err) {
+    console.error("[sms]", err);
+    return { ok: false, error: "SMS service unavailable. Please try again." };
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,30 +64,38 @@ export async function POST(req: NextRequest) {
     }
 
     const { phone } = parsed.data;
-    const supabase = getSupabaseAnon();
+    const admin = getSupabaseAdmin();
 
-    if (!supabase) {
+    if (!admin) {
       return NextResponse.json(
-        { error: "Authentication service not configured" },
+        { error: "Service not configured" },
         { status: 503 },
       );
     }
 
-    const { error } = await supabase.auth.signInWithOtp({
-      phone: `+91${phone}`,
-    });
+    const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
-    if (error) {
-      if (error.status === 429) {
-        return NextResponse.json(
-          { error: "Too many attempts. Please wait a minute and try again." },
-          { status: 429 },
-        );
-      }
-      console.error("[auth/send-otp]", error.status, error.message);
+    const { error: storeError } = await admin
+      .from("phone_otps")
+      .upsert(
+        { phone, otp_code: otp, expires_at: expiresAt },
+        { onConflict: "phone" },
+      );
+
+    if (storeError) {
+      console.error("[send-otp] store:", storeError.message);
       return NextResponse.json(
-        { error: error.message || "Failed to send OTP. Please try again." },
-        { status: error.status ?? 500 },
+        { error: "Failed to process request" },
+        { status: 500 },
+      );
+    }
+
+    const sms = await sendSMS(phone, otp);
+    if (!sms.ok) {
+      return NextResponse.json(
+        { error: sms.error ?? "Failed to send OTP" },
+        { status: 500 },
       );
     }
 
