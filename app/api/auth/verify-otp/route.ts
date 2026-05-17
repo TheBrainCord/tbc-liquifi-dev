@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { VerifyOTPSchema } from "@/lib/validations";
-import { getSupabaseAnon, getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin, getSupabaseAnon } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,41 +21,112 @@ export async function POST(req: NextRequest) {
     }
 
     const { phone, token, name, loan_type } = parsed.data;
-    const supabase = getSupabaseAnon();
+    const admin = getSupabaseAdmin();
+    const anon = getSupabaseAnon();
 
-    if (!supabase) {
+    if (!admin || !anon) {
       return NextResponse.json(
         { error: "Authentication service not configured" },
         { status: 503 },
       );
     }
 
-    const { data: authData, error: authError } = await supabase.auth.verifyOtp({
-      phone: `+91${phone}`,
-      token,
-      type: "sms",
-    });
+    // 1 — Verify OTP from our table
+    const { data: otpRow, error: otpFetchError } = await admin
+      .from("phone_otps")
+      .select("otp_code, expires_at")
+      .eq("phone", phone)
+      .single();
 
-    if (authError || !authData.user) {
+    if (otpFetchError || !otpRow) {
       return NextResponse.json(
-        { error: "Invalid or expired OTP. Please try again." },
+        { error: "OTP not found. Please request a new one." },
         { status: 401 },
       );
     }
 
-    // Upsert user profile — on first verify the record won't exist yet
-    const admin = getSupabaseAdmin();
-    if (admin) {
-      await admin.from("users").upsert(
-        {
-          id: authData.user.id,
-          phone,
-          full_name: name ?? null,
-        },
-        { onConflict: "id" },
+    if (new Date(otpRow.expires_at) < new Date()) {
+      await admin.from("phone_otps").delete().eq("phone", phone);
+      return NextResponse.json(
+        { error: "OTP expired. Please request a new one." },
+        { status: 401 },
       );
+    }
 
-      // Link any matching lead to this user (best-effort)
+    if (otpRow.otp_code !== token) {
+      return NextResponse.json(
+        { error: "Invalid OTP. Please check and try again." },
+        { status: 401 },
+      );
+    }
+
+    // OTP valid — consume it immediately
+    await admin.from("phone_otps").delete().eq("phone", phone);
+
+    // 2 — Create Supabase auth user if not already present
+    const autoEmail = `ph${phone}@auth.liquifi.cash`;
+
+    const { error: createError } = await admin.auth.admin.createUser({
+      email: autoEmail,
+      email_confirm: true,
+      phone: `+91${phone}`,
+      phone_confirm: true,
+      user_metadata: { phone, full_name: name ?? null },
+    });
+
+    // Ignore "already registered" — means the user exists and we can proceed
+    if (
+      createError &&
+      !createError.message?.toLowerCase().includes("already")
+    ) {
+      console.error("[verify-otp] createUser:", createError.message);
+      return NextResponse.json(
+        { error: "Failed to create account" },
+        { status: 500 },
+      );
+    }
+
+    // 3 — Generate a one-time magic link token for this user
+    const { data: linkData, error: linkError } =
+      await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email: autoEmail,
+      });
+
+    if (linkError || !linkData?.properties?.hashed_token) {
+      console.error("[verify-otp] generateLink:", linkError?.message);
+      return NextResponse.json(
+        { error: "Failed to create session" },
+        { status: 500 },
+      );
+    }
+
+    // 4 — Exchange the hashed token for a real session
+    const { data: sessionData, error: sessionError } =
+      await anon.auth.verifyOtp({
+        token_hash: linkData.properties.hashed_token,
+        type: "magiclink",
+      });
+
+    if (sessionError || !sessionData.session) {
+      console.error("[verify-otp] verifyOtp:", sessionError?.message);
+      return NextResponse.json(
+        { error: "Failed to establish session" },
+        { status: 500 },
+      );
+    }
+
+    const userId = sessionData.user?.id;
+
+    // 5 — Upsert user profile row
+    if (userId) {
+      await admin
+        .from("users")
+        .upsert(
+          { id: userId, phone, full_name: name ?? null },
+          { onConflict: "id" },
+        );
+
       if (loan_type) {
         await admin
           .from("leads")
@@ -68,8 +139,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       session: {
-        access_token: authData.session?.access_token,
-        refresh_token: authData.session?.refresh_token,
+        access_token: sessionData.session.access_token,
+        refresh_token: sessionData.session.refresh_token,
       },
     });
   } catch (err) {
