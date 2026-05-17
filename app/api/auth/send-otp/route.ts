@@ -10,13 +10,14 @@ async function sendSMS(
   phone: string,
   otp: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  const apiKey = process.env.FAST2SMS_API_KEY;
+  const apiKey = process.env.FAST2SMS_API_KEY?.trim();
 
   if (!apiKey) {
-    // Dev fallback — OTP visible in server logs only
     console.log(`[dev/otp] ${phone} → ${otp}`);
     return { ok: true };
   }
+
+  console.log(`[fast2sms] key=${apiKey.slice(0, 6)}… len=${apiKey.length}`);
 
   try {
     const res = await fetch("https://www.fast2sms.com/dev/bulkV2", {
@@ -34,6 +35,8 @@ async function sendSMS(
     });
 
     const data = await res.json().catch(() => ({}));
+    console.log(`[fast2sms] status=${res.status} body=${JSON.stringify(data)}`);
+
     if (!data.return) {
       const msg = Array.isArray(data.message) ? data.message[0] : data.message;
       return { ok: false, error: msg ?? "Failed to send OTP" };
