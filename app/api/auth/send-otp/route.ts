@@ -10,33 +10,26 @@ async function sendSMS(
   phone: string,
   otp: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  const apiKey = process.env.FAST2SMS_API_KEY?.trim();
+  const apiKey = process.env.TWOFACTOR_API_KEY?.trim();
 
   if (!apiKey) {
+    // Dev fallback — OTP visible in server logs only
     console.log(`[dev/otp] ${phone} → ${otp}`);
     return { ok: true };
   }
 
   try {
-    const params = new URLSearchParams({
-      authorization: apiKey,
-      route: "otp",
-      variables_values: otp,
-      numbers: phone,
-      flash: "0",
-    });
-
+    // 2Factor.in OTP API: GET /API/V1/{key}/SMS/{phone}/{otp}
     const res = await fetch(
-      `https://www.fast2sms.com/dev/bulkV2?${params.toString()}`,
+      `https://2factor.in/API/V1/${apiKey}/SMS/${phone}/${otp}`,
       { method: "GET" },
     );
 
     const data = await res.json().catch(() => ({}));
-    console.log(`[fast2sms] status=${res.status} body=${JSON.stringify(data)}`);
+    console.log(`[2factor] status=${res.status} body=${JSON.stringify(data)}`);
 
-    if (!data.return) {
-      const msg = Array.isArray(data.message) ? data.message[0] : data.message;
-      return { ok: false, error: msg ?? "Failed to send OTP" };
+    if (data.Status !== "Success") {
+      return { ok: false, error: data.Details ?? "Failed to send OTP" };
     }
     return { ok: true };
   } catch (err) {
