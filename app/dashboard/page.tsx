@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   TrendingUp,
@@ -239,7 +240,8 @@ const QUICK_ACTIONS = [
     icon: CreditCard,
     color: "text-[#ea580c]",
     bg: "bg-orange-50",
-    disabled: true,
+    disabled: false,
+    href: "/cibil-fix",
   },
   {
     label: "Upload Documents",
@@ -258,12 +260,12 @@ function QuickAction({
   color,
   bg,
   disabled,
+  href,
 }: (typeof QUICK_ACTIONS)[number]) {
-  return (
-    <button
-      disabled={disabled}
-      className="flex w-full items-center gap-4 rounded-xl border border-slate-100 p-4 text-left transition-colors hover:border-[#1e3a8a]/20 hover:bg-blue-50/30 disabled:cursor-not-allowed disabled:opacity-50"
-    >
+  const cls =
+    "flex w-full items-center gap-4 rounded-xl border border-slate-100 p-4 text-left transition-colors hover:border-[#1e3a8a]/20 hover:bg-blue-50/30 disabled:cursor-not-allowed disabled:opacity-50";
+  const inner = (
+    <>
       <div
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${bg}`}
       >
@@ -274,6 +276,18 @@ function QuickAction({
         <p className="text-xs text-slate-500">{desc}</p>
       </div>
       <ArrowRight size={16} className="shrink-0 text-slate-300" />
+    </>
+  );
+  if (href && !disabled) {
+    return (
+      <Link href={href} className={cls}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <button disabled={disabled} className={cls}>
+      {inner}
     </button>
   );
 }

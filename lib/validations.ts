@@ -36,6 +36,23 @@ export const VerifyOTPSchema = z.object({
   loan_type: z.string().optional(),
 });
 
+export const CibilCheckSchema = z.object({
+  pan: z
+    .string()
+    .regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Enter a valid PAN (e.g. ABCDE1234F)"),
+  phone: z.string().regex(/^\d{10}$/, "Enter a valid 10-digit mobile number"),
+  name: z.string().min(2, "Name must be at least 2 characters").optional(),
+});
+
+export const PaymentInitiateSchema = z.object({
+  plan: z.enum(["basic", "premium"]),
+  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/),
+  phone: z.string().regex(/^\d{10}$/),
+  name: z.string().optional(),
+});
+
 export type LeadCapture = z.infer<typeof LeadCaptureSchema>;
 export type SendOTP = z.infer<typeof SendOTPSchema>;
 export type VerifyOTP = z.infer<typeof VerifyOTPSchema>;
+export type CibilCheck = z.infer<typeof CibilCheckSchema>;
+export type PaymentInitiate = z.infer<typeof PaymentInitiateSchema>;
