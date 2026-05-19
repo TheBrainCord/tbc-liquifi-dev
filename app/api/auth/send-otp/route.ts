@@ -17,22 +17,19 @@ async function sendSMS(
     return { ok: true };
   }
 
-  console.log(`[fast2sms] key=${apiKey.slice(0, 6)}… len=${apiKey.length}`);
-
   try {
-    const res = await fetch("https://www.fast2sms.com/dev/bulkV2", {
-      method: "POST",
-      headers: {
-        authorization: apiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        route: "otp",
-        variables_values: otp,
-        numbers: phone,
-        flash: "0",
-      }),
+    const params = new URLSearchParams({
+      authorization: apiKey,
+      route: "otp",
+      variables_values: otp,
+      numbers: phone,
+      flash: "0",
     });
+
+    const res = await fetch(
+      `https://www.fast2sms.com/dev/bulkV2?${params.toString()}`,
+      { method: "GET" },
+    );
 
     const data = await res.json().catch(() => ({}));
     console.log(`[fast2sms] status=${res.status} body=${JSON.stringify(data)}`);
