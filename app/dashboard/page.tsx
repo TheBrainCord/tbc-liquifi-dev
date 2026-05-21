@@ -40,7 +40,11 @@ export default function DashboardPage() {
     null,
   );
 
-  const phone = user?.phone?.replace("+91", "") ?? "";
+  // Supabase stores phone as "+91XXXXXXXXXX" or "91XXXXXXXXXX" — strip country code robustly
+  const phone = (user?.phone ?? "")
+    .replace(/^\+?91/, "")
+    .replace(/\D/g, "")
+    .slice(-10);
 
   useEffect(() => {
     if (!loading && !user) {
