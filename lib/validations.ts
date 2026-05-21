@@ -36,6 +36,18 @@ export const VerifyOTPSchema = z.object({
   loan_type: z.string().optional(),
 });
 
+export const ConsultationSchema = z.object({
+  phone: z.string().regex(/^\d{10}$/, "Enter a valid 10-digit mobile number"),
+  name: z.string().min(2, "Name must be at least 2 characters").optional(),
+  consultation_type: z.enum(["cibil_fix", "loan"]),
+  loan_type: z.string().optional(),
+  cibil_score: z.number().int().min(300).max(900).optional(),
+  time_preference: z
+    .enum(["asap", "morning", "afternoon", "evening"])
+    .default("asap"),
+  notes: z.string().max(500).optional(),
+});
+
 export const CibilCheckSchema = z.object({
   pan: z
     .string()
@@ -54,5 +66,6 @@ export const PaymentInitiateSchema = z.object({
 export type LeadCapture = z.infer<typeof LeadCaptureSchema>;
 export type SendOTP = z.infer<typeof SendOTPSchema>;
 export type VerifyOTP = z.infer<typeof VerifyOTPSchema>;
+export type Consultation = z.infer<typeof ConsultationSchema>;
 export type CibilCheck = z.infer<typeof CibilCheckSchema>;
 export type PaymentInitiate = z.infer<typeof PaymentInitiateSchema>;
