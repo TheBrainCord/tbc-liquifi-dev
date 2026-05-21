@@ -12,8 +12,10 @@ import {
   CheckCircle,
   Loader2,
   AlertCircle,
+  PhoneCall,
 } from "lucide-react";
 import { useAuth } from "@/lib/supabase/auth-provider";
+import { ConsultationModal } from "@/components/ConsultationModal";
 
 interface UserProfile {
   full_name: string | null;
@@ -34,6 +36,9 @@ export default function DashboardPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [expertModal, setExpertModal] = useState<"cibil_fix" | "loan" | null>(
+    null,
+  );
 
   const phone = user?.phone?.replace("+91", "") ?? "";
 
@@ -77,6 +82,15 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {expertModal && (
+        <ConsultationModal
+          phone={phone}
+          name={profile?.full_name ?? undefined}
+          consultationType={expertModal}
+          initialStep="schedule"
+          onClose={() => setExpertModal(null)}
+        />
+      )}
       <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
         {/* Welcome banner */}
         <div className="rounded-2xl bg-gradient-to-r from-[#1e3a8a] to-[#1d4ed8] p-6 text-white">
@@ -136,6 +150,36 @@ export default function DashboardPage() {
             {QUICK_ACTIONS.map((action) => (
               <QuickAction key={action.label} {...action} />
             ))}
+          </div>
+        </div>
+
+        {/* Expert consultation card */}
+        <div className="rounded-2xl bg-gradient-to-r from-[#0f2460] to-[#1e3a8a] p-6 text-white">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10">
+              <PhoneCall size={20} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-black text-white">Talk to Our Experts</h2>
+              <p className="mt-0.5 text-sm text-blue-200">
+                Free 15-minute call — loan advice, CIBIL fix, or credit repair.
+                No commitment.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  onClick={() => setExpertModal("loan")}
+                  className="rounded-xl bg-white px-4 py-2 text-xs font-black text-[#1e3a8a] transition-all hover:bg-blue-50"
+                >
+                  Loan Expert Call
+                </button>
+                <button
+                  onClick={() => setExpertModal("cibil_fix")}
+                  className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-xs font-black text-white transition-all hover:bg-white/20"
+                >
+                  CIBIL Fix Expert Call
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

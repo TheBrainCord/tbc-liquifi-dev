@@ -22,6 +22,8 @@ interface ConsultationModalProps {
   loanType?: string;
   cibilScore?: number;
   onClose: () => void;
+  /** Skip OTP step when the caller has already verified the user (e.g. dashboard) */
+  initialStep?: "otp" | "schedule";
 }
 
 const TIME_SLOTS = [
@@ -40,8 +42,9 @@ export function ConsultationModal({
   loanType,
   cibilScore,
   onClose,
+  initialStep = "otp",
 }: ConsultationModalProps) {
-  const [step, setStep] = useState<Step>("otp");
+  const [step, setStep] = useState<Step>(initialStep);
   const [name, setName] = useState(initialName ?? "");
   const [timePreference, setTimePreference] = useState<string>("asap");
   const [notes, setNotes] = useState("");
@@ -216,10 +219,11 @@ export function ConsultationModal({
             </div>
             <div>
               <h4 className="font-black text-[#0f172a] text-lg">
-                Call Scheduled!
+                You're all set!
               </h4>
               <p className="text-sm text-slate-500 mt-1">
-                Our expert will call{" "}
+                Our expert will connect with you shortly for{" "}
+                <strong className="text-[#1e3a8a]">free consultation</strong> on{" "}
                 <strong className="text-[#0f172a]">+91 {phone}</strong>
               </p>
             </div>

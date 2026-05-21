@@ -7,6 +7,7 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { CIBILGauge } from "@/components/CIBILGauge";
 import { EMICalculator } from "@/components/EMICalculator";
 import { Testimonials } from "@/components/Testimonials";
+import { ExpertCallSection } from "@/components/ExpertCallSection";
 import { Footer } from "@/components/Footer";
 
 export default function HomePage() {
@@ -21,6 +22,7 @@ export default function HomePage() {
       <CIBILGauge />
       <EMICalculator />
       <Testimonials />
+      <ExpertCallSection />
       <Footer />
     </main>
   );
