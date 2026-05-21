@@ -10,11 +10,18 @@ interface OTPModalProps {
   name?: string;
   loanType?: string;
   onClose: () => void;
+  onSuccess?: () => void; // if provided, called instead of redirecting to /dashboard
 }
 
 type Stage = "sending" | "ready" | "verifying" | "error";
 
-export function OTPModal({ phone, name, loanType, onClose }: OTPModalProps) {
+export function OTPModal({
+  phone,
+  name,
+  loanType,
+  onClose,
+  onSuccess,
+}: OTPModalProps) {
   const router = useRouter();
   const [otp, setOtp] = useState("");
   const [stage, setStage] = useState<Stage>("sending");
@@ -90,7 +97,11 @@ export function OTPModal({ phone, name, loanType, onClose }: OTPModalProps) {
       await supabase?.auth.setSession(data.session);
     }
 
-    router.push("/dashboard");
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      router.push("/dashboard");
+    }
   };
 
   return (
