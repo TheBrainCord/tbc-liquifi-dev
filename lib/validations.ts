@@ -11,6 +11,7 @@ export const LeadCaptureSchema = z.object({
     "education",
     "medical",
     "cibil_fix",
+    "balance_transfer",
   ]),
   loan_amount: z.string().optional(),
   employment_type: z

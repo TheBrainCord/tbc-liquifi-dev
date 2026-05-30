@@ -11,6 +11,7 @@ const NAV_LINKS = [
       { label: "Home Loan", href: "#home-loan" },
       { label: "Business Loan", href: "#business-loan" },
       { label: "Car Loan", href: "#car-loan" },
+      { label: "Balance Transfer", href: "/balance-transfer" },
     ],
   },
   { label: "CIBIL Fix", href: "#cibil-fix" },

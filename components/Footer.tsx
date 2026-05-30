@@ -3,12 +3,13 @@
 import { Phone, Mail, MapPin, Shield, Lock, ExternalLink } from "lucide-react";
 
 const LOAN_LINKS = [
-  "Personal Loan",
-  "Home Loan",
-  "Business Loan",
-  "Car Loan",
-  "Education Loan",
-  "Medical Loan",
+  { label: "Personal Loan", href: "#personal-loan" },
+  { label: "Home Loan", href: "#home-loan" },
+  { label: "Business Loan", href: "#business-loan" },
+  { label: "Car Loan", href: "#car-loan" },
+  { label: "Education Loan", href: "#check-eligibility" },
+  { label: "Medical Loan", href: "#check-eligibility" },
+  { label: "Balance Transfer", href: "/balance-transfer" },
 ];
 
 const COMPANY_LINKS = [
@@ -117,13 +118,13 @@ export function Footer() {
             Loan Products
           </h3>
           <ul className="space-y-2.5">
-            {LOAN_LINKS.map((link) => (
-              <li key={link}>
+            {LOAN_LINKS.map(({ label, href }) => (
+              <li key={label}>
                 <a
-                  href="#"
+                  href={href}
                   className="text-sm text-slate-400 hover:text-white transition-colors"
                 >
-                  {link}
+                  {label}
                 </a>
               </li>
             ))}

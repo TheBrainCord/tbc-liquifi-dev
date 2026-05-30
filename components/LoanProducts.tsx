@@ -8,6 +8,7 @@ import {
   Car,
   GraduationCap,
   Heart,
+  RefreshCw,
   ArrowRight,
   CheckCircle,
 } from "lucide-react";
@@ -114,6 +115,23 @@ const PRODUCTS = [
     ],
     popular: false,
     href: "#check-eligibility",
+  },
+  {
+    icon: RefreshCw,
+    title: "Balance Transfer",
+    subtitle: "Cut your interest burden",
+    rate: "10.5% p.a.",
+    max: "₹50 Lakh",
+    tenure: "Up to 5 yrs",
+    color: "#0369a1",
+    bg: "#f0f9ff",
+    features: [
+      "Credit card debt to 10.5%",
+      "Reduce EMI by up to 40%",
+      "Single EMI replaces all loans",
+    ],
+    popular: false,
+    href: "/balance-transfer",
   },
 ];
 
