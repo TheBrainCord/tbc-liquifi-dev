@@ -39,6 +39,7 @@ export const VerifyOTPSchema = z.object({
 export const ConsultationSchema = z.object({
   phone: z.string().regex(/^\d{10}$/, "Enter a valid 10-digit mobile number"),
   name: z.string().min(2, "Name must be at least 2 characters").optional(),
+  email: z.string().email("Enter a valid email address").optional(),
   consultation_type: z.enum(["cibil_fix", "loan"]),
   loan_type: z.string().optional(),
   cibil_score: z.number().int().min(300).max(900).optional(),

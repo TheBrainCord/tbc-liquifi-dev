@@ -46,6 +46,7 @@ export function ConsultationModal({
 }: ConsultationModalProps) {
   const [step, setStep] = useState<Step>(initialStep);
   const [name, setName] = useState(initialName ?? "");
+  const [email, setEmail] = useState("");
   const [timePreference, setTimePreference] = useState<string>("asap");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -63,6 +64,7 @@ export function ConsultationModal({
         body: JSON.stringify({
           phone,
           name: name || undefined,
+          email: email || undefined,
           consultation_type: consultationType,
           loan_type: loanType,
           cibil_score: cibilScore,
@@ -141,6 +143,23 @@ export function ConsultationModal({
                 className="input-field"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+
+            {/* Email — for confirmation */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Email{" "}
+                <span className="font-normal text-slate-400">
+                  (get a confirmation email)
+                </span>
+              </label>
+              <input
+                type="email"
+                placeholder="yourname@email.com"
+                className="input-field"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
@@ -226,6 +245,12 @@ export function ConsultationModal({
                 <strong className="text-[#1e3a8a]">free consultation</strong> on{" "}
                 <strong className="text-[#0f172a]">+91 {phone}</strong>
               </p>
+              {email && (
+                <p className="text-xs text-slate-400 mt-1">
+                  Confirmation sent to{" "}
+                  <span className="font-semibold">{email}</span>
+                </p>
+              )}
             </div>
 
             <div className="bg-blue-50 rounded-xl p-4 text-left space-y-2">
