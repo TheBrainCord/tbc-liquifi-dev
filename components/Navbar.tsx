@@ -14,7 +14,14 @@ const NAV_LINKS = [
       { label: "Balance Transfer", href: "/balance-transfer" },
     ],
   },
-  { label: "CIBIL Fix", href: "#cibil-fix" },
+  {
+    label: "Services",
+    children: [
+      { label: "CIBIL Fix", href: "/cibil-fix" },
+      { label: "ITR Filing", href: "/itr-filing" },
+      { label: "Balance Transfer", href: "/balance-transfer" },
+    ],
+  },
   { label: "EMI Calculator", href: "#emi-calculator" },
   { label: "How It Works", href: "#how-it-works" },
 ];

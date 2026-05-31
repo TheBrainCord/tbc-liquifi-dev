@@ -67,7 +67,7 @@ export function Footer() {
       </div>
 
       {/* Main footer */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
         {/* Brand */}
         <div className="col-span-2 md:col-span-3 lg:col-span-1 space-y-4">
           <div className="flex items-center gap-2">
@@ -110,6 +110,29 @@ export function Footer() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Services */}
+        <div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300 mb-4">
+            Services
+          </h3>
+          <ul className="space-y-2.5">
+            {[
+              { label: "CIBIL Fix", href: "/cibil-fix" },
+              { label: "ITR Filing", href: "/itr-filing" },
+              { label: "Balance Transfer", href: "/balance-transfer" },
+            ].map(({ label, href }) => (
+              <li key={label}>
+                <a
+                  href={href}
+                  className="text-sm text-slate-400 hover:text-white transition-colors"
+                >
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* Loan Products */}
