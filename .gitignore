@@ -1,6 +1,8 @@
 # Next.js
 .next/
 out/
+dist/
+build/
 
 # Dependencies
 node_modules/
@@ -9,10 +11,15 @@ node_modules/
 .vercel/
 
 # Env files
+.env
 .env.local
-.env.*.local
+.env*.local
+.env.production
 
 # Misc
 .DS_Store
+Thumbs.db
 *.tsbuildinfo
+.turbo/
+npm-debug.log*
 next-env.d.ts
