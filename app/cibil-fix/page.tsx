@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
   ArrowRight,
-  CheckCircle,
   AlertTriangle,
   TrendingUp,
   Shield,

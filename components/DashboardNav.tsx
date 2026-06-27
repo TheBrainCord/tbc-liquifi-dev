@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -20,12 +21,12 @@ export function DashboardNav() {
   return (
     <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-200 bg-white">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-        <a href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1e3a8a]">
             <span className="text-xs font-black text-white">LF</span>
           </div>
           <span className="text-lg font-black text-[#1e3a8a]">LiquiFi</span>
-        </a>
+        </Link>
 
         <div className="flex items-center gap-3">
           {phone && (

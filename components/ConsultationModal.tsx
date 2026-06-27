@@ -238,7 +238,7 @@ export function ConsultationModal({
             </div>
             <div>
               <h4 className="font-black text-[#0f172a] text-lg">
-                You're all set!
+                You&apos;re all set!
               </h4>
               <p className="text-sm text-slate-500 mt-1">
                 Our expert will connect with you shortly for{" "}

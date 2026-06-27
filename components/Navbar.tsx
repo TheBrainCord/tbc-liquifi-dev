@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Phone, Shield, Menu, X, ChevronDown } from "lucide-react";
 
@@ -62,14 +63,14 @@ export function Navbar() {
 
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2 shrink-0">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
           <div className="w-8 h-8 rounded-lg bg-[#1e3a8a] flex items-center justify-center">
             <span className="text-white font-black text-sm">L</span>
           </div>
           <span className="font-black text-xl text-[#1e3a8a]">
             Liqui<span className="text-[#ea580c]">Fi</span>
           </span>
-        </a>
+        </Link>
 
         {/* Desktop nav */}
         <ul className="hidden lg:flex items-center gap-1">
