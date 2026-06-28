@@ -56,7 +56,10 @@ export function OTPModal({
   };
 
   useEffect(() => {
-    sendOTP();
+    const timer = window.setTimeout(() => {
+      void sendOTP();
+    }, 0);
+    return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

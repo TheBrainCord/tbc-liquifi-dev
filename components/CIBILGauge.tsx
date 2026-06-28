@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { AlertTriangle, CheckCircle, Info } from "lucide-react";
 
 const SCORE_ZONES = [
   { min: 300, max: 549, label: "Poor", color: "#ef4444", bg: "#fef2f2" },

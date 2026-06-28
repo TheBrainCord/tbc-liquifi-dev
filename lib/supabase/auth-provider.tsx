@@ -23,16 +23,14 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const supabase = getSupabaseClient();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(supabase));
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
-
     // Supabase not configured (env vars missing) — render unauthenticated.
     if (!supabase) {
-      setLoading(false);
       return;
     }
 
@@ -51,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
 
   return (
     <AuthContext.Provider value={{ user, session, loading }}>
